@@ -61,6 +61,12 @@
 
             // Envia o pacote de volta ao bot de forma invisível e fecha o Mini App
             tg.sendData(JSON.stringify(pacoteDados));
+            // No seu arquivo index.html, dentro da função enviarDados()
+            function enviarDados() {
+                // ... seu código atual ...
+                tg.sendData(JSON.stringify(pacoteDados)); // Envia para o Python
+                tg.close(); // Força o Mini App a fechar na hora
+            }
         }
     </script>
 </body>
