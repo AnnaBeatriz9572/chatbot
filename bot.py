@@ -1,67 +1,21 @@
-# bibliotecas
 import telebot as tb
-from telebot.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
-import json
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-chave_api = "8620872096:AAEK4ZvC34_VjdwahJnae3exiSSNeuIdEYM"
-bot = tb.TeleBot(chave_api)
-print(f"O token atual começa com: {chave_api[:10]}...")
-
-# --- 1. COMANDO START ---
+bot = tb.TeleBot("8620872096:AAEK4ZvC34_VjdwahJnae3exiSSNeuIdEYM")
 
 @bot.message_handler(commands=['start'])
 def boasvindas(mensagem):
-    # Mudamos para ReplyKeyboardMarkup (o botão que fica fixo embaixo)
-    teclado = ReplyKeyboardMarkup(resize_keyboard=True) 
-    url_mini_app = "https://annabeatriz9572.github.io/chatbot/" 
+    teclado = InlineKeyboardMarkup()
+    # Link do seu sistema web no GitHub Pages
+    url_web = "https://annabeatriz9572.github.io/chatbot/"
     
-    # Mudamos para KeyboardButton
-    botao_scanner = KeyboardButton(
-        text="📷 Escanear CRM", 
-        web_app=WebAppInfo(url=url_mini_app)
+    botao = InlineKeyboardButton(text="🔐 Abrir Sistema de Autenticação", url=url_web)
+    teclado.add(botao)
+    
+    bot.send_message(
+        mensagem.chat.id, 
+        "Bem-vinda ao sistema MFA da sua IC.\n\nClique abaixo para validar sua identidade no navegador:", 
+        reply_markup=teclado
     )
-    
-    teclado.add(botao_scanner)
-    texto = 'Olá! Bem-vindo ao sistema de MFA da IC 2025-2026.'
-    bot.send_message(mensagem.chat.id, texto, reply_markup=teclado)
 
-
-# --- 2. NOVO: RECEBER OS DADOS DO MINI APP ---
-@bot.message_handler(content_types=['web_app_data'])
-def receber_dados(mensagem):
-    print("Recebi um /start!")
-    # Pega o "pacotinho" de texto enviado pelo site e transforma em variáveis no Python
-    dados_recebidos = mensagem.web_app_data.data
-    pacote = json.loads(dados_recebidos)
-    
-    cpf_digitado = pacote.get("cpf")
-    senha_digitada = pacote.get("senha")
-    qr_code_lido = pacote.get("qr_code")
-
-    # --- SIMULAÇÃO DA API ---
-    # No futuro do projeto, aqui entrará a conexão via "requests" para validação 
-    # na API dos Conselhos Regionais de Medicina (CRM).
-    # Por enquanto, teste o sucesso com CPF 123 e Senha 456 no seu Mini App!
-    
-    if cpf_digitado == "123" and senha_digitada == "456":
-        
-        texto_sucesso = f"✅ Identidade validada com sucesso!"
-        bot.send_message(mensagem.chat.id, texto_sucesso)
-        
-    else:
-        
-        # Cria o botão de novo para o caso de erro
-        teclado_erro = InlineKeyboardMarkup()
-        url_mini_app = "https://annabeatriz9572.github.io" 
-        botao_tentar = InlineKeyboardButton(
-            text="🔄 Tentar Novamente", 
-            web_app=WebAppInfo(url=url_mini_app)
-        )
-        teclado_erro.add(botao_tentar)
-        
-        texto_erro = "❌ Erro na autenticação: CPF ou Senha não conferem. Por favor, tente novamente."
-        bot.send_message(mensagem.chat.id, texto_erro, reply_markup=teclado_erro)
-
-
-# --- 3. MOTOR DO BOT (Sempre a última linha) ---
 bot.infinity_polling()

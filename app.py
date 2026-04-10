@@ -3,29 +3,35 @@ from flask_cors import CORS
 import telebot
 
 app = Flask(__name__)
-CORS(app) # Permite que o seu site no GitHub fale com este servidor
+CORS(app) # Crucial para permitir a conexão do site com o seu Python
 
-# Opcional: Mantemos o bot apenas para NOTIFICAR o sucesso
 bot = telebot.TeleBot("8620872096:AAEK4ZvC34_VjdwahJnae3exiSSNeuIdEYM")
-CHAT_ID_ADMIN = "SEU_ID_AQUI" 
+CHAT_ID_ADMIN = "5616654763" # Use seu ID real aqui
 
 @app.route('/validar', methods=['POST'])
 def validar_mfa():
     dados = request.json
+    print(f"--- Nova Tentativa de Login ---")
+    print(f"Dados recebidos: {dados}")
+
     cpf = dados.get("cpf")
     senha = dados.get("senha")
     qr_code = dados.get("qr_code")
 
-    # Mantemos a sua lógica de validação da IC
+    # Lógica de validação da sua IC
     if cpf == "123" and senha == "456":
-        mensagem = f"✅ Autenticação Web confirmada!\nCPF: {cpf}\nQR: {qr_code}"
+        mensagem_confirmacao = (
+            f"✅ **MFA APROVADO**\n"
+            f"Profissional Autenticado via Web\n"
+            f"CPF: {cpf}\n"
+            f"CRM/QR: {qr_code}"
+        )
+        bot.send_message(CHAT_ID_ADMIN, mensagem_confirmacao, parse_mode="Markdown")
         
-        # Notifica o Gabriel/Pesquisador no Telegram
-        bot.send_message(CHAT_ID_ADMIN, mensagem) 
-        
-        return jsonify({"status": "sucesso", "mensagem": "Login concluído com sucesso!"}), 200
+        return jsonify({"status": "sucesso", "mensagem": "Autenticação concluída! Verifique o Telegram."}), 200
     else:
-        return jsonify({"status": "erro", "mensagem": "CPF ou Senha inválidos."}), 401
+        return jsonify({"status": "erro", "mensagem": "Credenciais inválidas."}), 401
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Rodando em 0.0.0.0 para aceitar conexões do celular na mesma rede
+    app.run(host='0.0.0.0', debug=True, port=5000)

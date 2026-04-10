@@ -2,48 +2,75 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>MFA - Validação Independente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA - Sistema de Autenticação Médica</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        #reader { width: 300px; margin: 20px auto; }
-        .sucesso { color: green; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { color: #007bff; margin-bottom: 20px; font-size: 22px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; margin: 15px 0; border: 1px solid #ccc; }
+        button { width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background-color: #218838; }
+        #status { padding: 10px; margin-top: 10px; border-radius: 4px; font-size: 14px; }
+        .pendente { background: #fff3cd; color: #856404; }
+        .sucesso { background: #d4edda; color: #155724; }
     </style>
 </head>
 <body>
-    <h2>Autenticação de Profissional (Web)</h2>
-    <input type="text" id="cpf" placeholder="CPF">
-    <input type="password" id="senha" placeholder="Senha">
-    
-    <div id="reader"></div> <p id="msg"></p>
+    <div class="card">
+        <h2>🏥 Autenticação MFA</h2>
+        <input type="text" id="cpf" placeholder="CPF">
+        <input type="password" id="senha" placeholder="Senha Institucional">
+        
+        <div id="status" class="pendente">Aguardando leitura do QR Code CRM...</div>
+        <div id="reader"></div> 
 
-    <button onclick="enviarDados()" style="padding: 15px; background: #28a745; color: white;">Finalizar Login</button>
+        <button onclick="enviarDados()">Finalizar e Validar Identidade</button>
+    </div>
 
     <script>
         let dadosQR = "";
 
-        // Inicializa a câmera no navegador comum
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
-            (textoLido) => {
-                dadosQR = textoLido;
-                document.getElementById("msg").innerText = "✅ QR Code capturado!";
-            }
-        );
+        // Inicializa o Scanner de forma automática e visual
+        function onScanSuccess(decodedText) {
+            dadosQR = decodedText;
+            const status = document.getElementById("status");
+            status.innerText = "✅ QR Code Capturado!";
+            status.className = "sucesso";
+            // Opcional: parar o scanner após ler
+            html5QrcodeScanner.clear();
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess);
 
         async function enviarDados() {
             const cpf = document.getElementById("cpf").value;
             const senha = document.getElementById("senha").value;
 
-            // Envia para o seu servidor Python (Flask)
-            const resposta = await fetch('http://localhost:5000/validar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cpf, senha, qr_code: dadosQR })
-            });
+            if (!dadosQR || !cpf || !senha) {
+                alert("Erro: Preencha CPF/Senha e escaneie o QR Code.");
+                return;
+            }
 
-            const resultado = await resposta.json();
-            alert(resultado.mensagem);
+            // ATENÇÃO: Se testar no celular, substitua 'localhost' pelo IP do seu PC
+            const servidor_ip = "localhost"; 
+
+            try {
+                const resposta = await fetch(`http://${servidor_ip}:5000/validar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cpf, senha, qr_code: dadosQR })
+                });
+
+                const resultado = await resposta.json();
+                alert(resultado.mensagem);
+                if (resultado.status === "sucesso") window.close();
+            } catch (error) {
+                alert("Erro de conexão: Verifique se o app.py está rodando.");
+            }
         }
     </script>
 </body>
