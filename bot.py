@@ -14,8 +14,9 @@ def boasvindas(mensagem):
     
     bot.send_message(
         mensagem.chat.id, 
-        "Bem-vinda ao sistema MFA da sua IC.\n\nClique abaixo para validar sua identidade no navegador:", 
+        "Olá! Bem-vinda ao portal de autenticação da IC.\n\nClique abaixo para validar sua identidade no navegador:", 
         reply_markup=teclado
     )
 
+print("Bot aguardando comandos...")
 bot.infinity_polling()
