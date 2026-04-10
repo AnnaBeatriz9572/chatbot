@@ -2,67 +2,48 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validação Médica</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>MFA - Validação Independente</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
-        input, button { width: 100%; padding: 10px; margin-top: 10px; box-sizing: border-box; }
-        button { background-color: #0088cc; color: white; border: none; cursor: pointer; }
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        #reader { width: 300px; margin: 20px auto; }
+        .sucesso { color: green; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <h2>Autenticação de Profissional</h2>
+    <h2>Autenticação de Profissional (Web)</h2>
+    <input type="text" id="cpf" placeholder="CPF">
+    <input type="password" id="senha" placeholder="Senha">
     
-    <label for="cpf">CPF:</label>
-    <input type="text" id="cpf" placeholder="Digite seu CPF">
+    <div id="reader"></div> <p id="msg"></p>
 
-    <label for="senha">Senha Institucional:</label>
-    <input type="password" id="senha" placeholder="Sua senha">
-
-    <p id="status-qr">QR Code: ❌ Não escaneado</p>
-    <button onclick="escanearQR()">📷 Escanear Carteira (QR Code)</button>
-
-    <button onclick="enviarDados()" style="background-color: #28a745; margin-top: 30px;">✅ Validar Identidade</button>
+    <button onclick="enviarDados()" style="padding: 15px; background: #28a745; color: white;">Finalizar Login</button>
 
     <script>
-        // Inicializa o Mini App do Telegram
-        let tg = window.Telegram.WebApp;
-        tg.expand(); // Abre o app em tela cheia
-
         let dadosQR = "";
 
-        // 3. Função nativa do Telegram para abrir a câmera e ler o QR Code
-        function escanearQR() {
-            tg.showScanQrPopup({text: "Aponte para o QR Code da Carteira Médica"}, function(textoLido) {
+        // Inicializa a câmera no navegador comum
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+            (textoLido) => {
                 dadosQR = textoLido;
-                document.getElementById("status-qr").innerText = "QR Code: ✅ Escaneado com sucesso!";
-                return true; // Fecha o popup da câmera
-            });
-        }
-
-        // 4. Empacota os dados e envia de volta para o seu bot em Python
-        function enviarDados() {
-            let cpf = document.getElementById("cpf").value;
-            let senha = document.getElementById("senha").value;
-
-            if (!dadosQR || !cpf || !senha) {
-                tg.showAlert("Por favor, preencha todos os campos e escaneie o QR Code.");
-                return;
+                document.getElementById("msg").innerText = "✅ QR Code capturado!";
             }
+        );
 
-            let pacoteDados = {
-                qr_code: dadosQR,
-                cpf: cpf,
-                senha: senha
-            };
+        async function enviarDados() {
+            const cpf = document.getElementById("cpf").value;
+            const senha = document.getElementById("senha").value;
 
-            // Envia os dados de volta para o bot
-            tg.sendData(JSON.stringify(pacoteDados));
-    
-            // Fecha o Mini App automaticamente
-            tg.close(); 
+            // Envia para o seu servidor Python (Flask)
+            const resposta = await fetch('http://localhost:5000/validar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cpf, senha, qr_code: dadosQR })
+            });
+
+            const resultado = await resposta.json();
+            alert(resultado.mensagem);
         }
     </script>
 </body>
