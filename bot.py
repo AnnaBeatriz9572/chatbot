@@ -1,10 +1,3 @@
-"""
-bot.py — Bot Telegram exclusivo para NOTIFICAÇÕES do sistema MFA.
-
-COMO RODAR:
-  1. Certifique-se que o .env tem BOT_TOKEN e PORTAL_URL
-  2. Execute em um terminal separado do app.py:  python bot.py
-"""
 
 import os
 import logging
@@ -49,9 +42,6 @@ if not BOT_TOKEN:
 bot = telebot.TeleBot(BOT_TOKEN, threaded=True)
 logger.info("Bot conectado. Aguardando mensagens...")
 
-# ─────────────────────────────────────────────
-#  Handlers
-# ─────────────────────────────────────────────
 
 @bot.message_handler(commands=["start", "ajuda"])
 def handle_start(message: telebot.types.Message) -> None:
@@ -95,9 +85,6 @@ def handle_desconhecido(message: telebot.types.Message) -> None:
     )
 
 
-# ─────────────────────────────────────────────
-#  Entry point
-# ─────────────────────────────────────────────
 if __name__ == "__main__":
     logger.info("Bot rodando. Pressione Ctrl+C para parar.")
     bot.infinity_polling(
