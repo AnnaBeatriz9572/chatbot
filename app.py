@@ -1,12 +1,3 @@
-"""
-app.py — Servidor Flask para o sistema MFA de saúde.
-
-COMO RODAR:
-  1. pip install -r requirements.txt
-  2. Preencha o .env com seu BOT_TOKEN
-  3. python app.py
-  4. Acesse http://localhost:5000
-"""
 
 import os
 import io
@@ -81,15 +72,9 @@ CORS(app)
 # ─────────────────────────────────────────────
 bot = telebot.TeleBot(BOT_TOKEN, threaded=False)
 
-# ─────────────────────────────────────────────
-#  Sessões (thread-safe)
-# ─────────────────────────────────────────────
 _lock_sessoes = threading.Lock()
 sessoes_ativas: dict = {}
 
-# ─────────────────────────────────────────────
-#  Rate limiting por IP
-# ─────────────────────────────────────────────
 _lock_rate    = threading.Lock()
 _historico    = {}
 MAX_TENTATIVAS   = 5
